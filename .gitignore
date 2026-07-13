@@ -4,3 +4,6 @@ __pycache__/
 .pytest_cache/
 report.html
 .DS_Store
+
+# 仅本地保留，不推送到远程仓库 / kept locally only, not pushed to remote
+DESIGN.md
