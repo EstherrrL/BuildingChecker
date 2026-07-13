@@ -76,6 +76,7 @@ Both input types are converted into a unified `BuildingModel`; the rule engine i
 - Geometric clash detection (walls/beams/pipes) is not implemented, as it is computationally heavier; left as future work.
 - IFC corridor parsing uses a simplified heuristic (identifying `IfcSpace` by name keywords); production use should customize the logic per the project's BIM modeling standard.
 - Rules are currently hard-coded; a future extension could move them into configurable YAML/JSON rule files so rules can be added/removed without code changes.
+- Not using LangChain/LangGraph for now, since the current flow is a single-pass, deterministic pipeline (rules → LLM summary) with no multi-step reasoning. These frameworks would be worth introducing if we add multi-turn Q&A, RAG over real code documents, or multi-agent orchestration.
 
 ---
 ---
@@ -158,3 +159,4 @@ tests/                      单元测试
 - 未实现几何碰撞检测（墙/梁/管道），该功能计算复杂度较高，作为后续扩展方向。
 - IFC 走道解析为简化启发式处理（通过名称关键字识别 `IfcSpace`），生产环境建议按项目 BIM 建模规范定制识别逻辑。
 - 规则目前硬编码在代码中，后续可扩展为可配置的 YAML/JSON 规则文件，无需改代码即可增删规则。
+- 暂未使用 LangChain/LangGraph：当前流程是单次线性调用（规则判断 → LLM 总结），无需多步推理。若后续支持多轮追问、检索真实规范条文（RAG）或多智能体协作，再引入会更合适。
