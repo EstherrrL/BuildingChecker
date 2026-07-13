@@ -1,0 +1,53 @@
+{
+  "project": "Demo Building A - 测试模型",
+  "doors": [
+    {
+      "id": "D-101",
+      "name": "疏散门-1F-东",
+      "overall_width": 0.85,
+      "fire_rating": "",
+      "is_escape_door": true
+    },
+    {
+      "id": "D-102",
+      "name": "",
+      "overall_width": 1.0,
+      "fire_rating": "A1.00h",
+      "is_escape_door": true
+    },
+    {
+      "id": "D-103",
+      "name": "办公室门-2F-01",
+      "overall_width": 0.9,
+      "fire_rating": null,
+      "is_escape_door": false
+    },
+    {
+      "id": "D-104",
+      "name": "防火门-地下室-01",
+      "overall_width": 0.95,
+      "fire_rating": "",
+      "is_escape_door": true
+    }
+  ],
+  "corridors": [
+    {
+      "id": "C-01",
+      "name": "1F主走道",
+      "width": 1.35,
+      "is_escape_route": true
+    },
+    {
+      "id": "C-02",
+      "name": "2F走道-西",
+      "width": 1.05,
+      "is_escape_route": true
+    },
+    {
+      "id": "C-03",
+      "name": "地下室设备走道",
+      "width": 0.8,
+      "is_escape_route": false
+    }
+  ]
+}

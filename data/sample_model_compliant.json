@@ -1,0 +1,27 @@
+{
+  "project": "Demo Building B - 全部合规模型",
+  "doors": [
+    {
+      "id": "D-201",
+      "name": "疏散门-1F-西",
+      "overall_width": 1.0,
+      "fire_rating": "A1.00h",
+      "is_escape_door": true
+    },
+    {
+      "id": "D-202",
+      "name": "办公室门-2F-02",
+      "overall_width": 0.9,
+      "fire_rating": "",
+      "is_escape_door": false
+    }
+  ],
+  "corridors": [
+    {
+      "id": "C-11",
+      "name": "1F主走道",
+      "width": 1.4,
+      "is_escape_route": true
+    }
+  ]
+}
