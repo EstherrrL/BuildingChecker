@@ -4,6 +4,12 @@ __pycache__/
 .pytest_cache/
 report.html
 .DS_Store
+streamlit.log
+
+# API Key / 密钥相关文件，切勿提交到远程仓库
+.env
+.env.*
+*.key
 
 # 仅本地保留，不推送到远程仓库 / kept locally only, not pushed to remote
 DESIGN.md

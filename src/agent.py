@@ -1,9 +1,10 @@
 """
 Agent 主流程：解析模型 -> 运行规则 -> (可选) LLM 总结 -> 返回结果。
 
-LLM 总结部分做成可插拔：
-  - 若环境变量 OPENAI_API_KEY 存在，则调用 OpenAI 接口生成自然语言总结；
-  - 否则使用本地的简单模板生成"伪总结"（保证 Demo 在无网络/无 API Key 时也能完整跑通）。
+LLM 总结部分做成可插拔，支持两种后端（按优先级检测环境变量）：
+  1. 火山方舟 Ark（字节跳动豆包）：设置 ARK_API_KEY + ARK_ENDPOINT_ID
+  2. OpenAI：设置 OPENAI_API_KEY
+  若都未设置，则使用本地的简单模板生成"伪总结"（保证 Demo 在无网络/无 API Key 时也能完整跑通）。
 """
 
 from __future__ import annotations
@@ -62,16 +63,35 @@ def _fallback_summary(model: BuildingModel, issues: List[Issue]) -> str:
     return " ".join(lines)
 
 
+def _build_llm_client():
+    """
+    根据环境变量选择 LLM 后端，返回 (client, model_name) 或 (None, None)。
+    优先使用火山方舟 Ark（豆包），其次 OpenAI。
+    """
+    ark_key = os.environ.get("ARK_API_KEY")
+    ark_endpoint = os.environ.get("ARK_ENDPOINT_ID")
+    if ark_key and ark_endpoint:
+        from openai import OpenAI
+
+        client = OpenAI(api_key=ark_key, base_url="https://ark.cn-beijing.volces.com/api/v3")
+        return client, ark_endpoint
+
+    openai_key = os.environ.get("OPENAI_API_KEY")
+    if openai_key:
+        from openai import OpenAI
+
+        client = OpenAI(api_key=openai_key)
+        return client, "gpt-4o-mini"
+
+    return None, None
+
+
 def generate_summary(model: BuildingModel, issues: List[Issue]) -> str:
-    api_key = os.environ.get("OPENAI_API_KEY")
-    if not api_key:
+    client, model_name = _build_llm_client()
+    if client is None:
         return _fallback_summary(model, issues)
 
     try:
-        from openai import OpenAI
-
-        client = OpenAI(api_key=api_key)
-        prompt_path = Path(__file__).resolve().parent.parent / "prompts" / "report_summary_prompt.md"
         system_prompt = (
             "你是一名建筑合规审查助手，请阅读规则引擎输出的问题列表，"
             "生成150-250字的中文总结与整改优先级建议，不要重新判断数值结论。"
@@ -85,7 +105,7 @@ def generate_summary(model: BuildingModel, issues: List[Issue]) -> str:
             "请根据上述信息生成总结与整改建议。"
         )
         resp = client.chat.completions.create(
-            model="gpt-4o-mini",
+            model=model_name,
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
