@@ -19,8 +19,9 @@ from pathlib import Path
 
 import streamlit as st
 
-from src.agent import load_model, run_rules, generate_summary
+from src.agent import load_model, run_rules, generate_summary, build_rules
 from src.report import HTML_TEMPLATE
+from src.thresholds import load_thresholds, list_regions, list_building_types, get_thresholds
 
 ROOT = Path(__file__).resolve().parent
 SAMPLE_FILES = {
@@ -33,7 +34,7 @@ st.set_page_config(page_title="建筑合规检查 Agent", layout="wide")
 st.title("建筑合规检查 Agent")
 st.caption("对建筑设计模型（IFC / 简化 JSON）进行疏散宽度与关键属性完整性检查")
 
-# ---------------- 侧边栏：LLM 配置状态 ----------------
+# ---------------- 侧边栏：LLM 配置状态 + 地区/建筑类型阈值 ----------------
 with st.sidebar:
     st.header("设置")
 
@@ -50,8 +51,30 @@ with st.sidebar:
     st.divider()
     st.subheader("已实现规则")
     st.markdown(
-        "- **R1-EscapeWidth**：疏散门 ≥ 0.9m / 疏散走道 ≥ 1.2m\n"
+        "- **R1-EscapeWidth**：疏散门 / 疏散走道净宽度检查\n"
         "- **R2-PropertyCompleteness**：名称 / 防火门 FireRating 是否填写"
+    )
+
+    st.divider()
+    st.subheader("疏散宽度阈值（按地区/建筑类型）")
+    st.caption("阈值来自 data/thresholds.json，示例数据，非官方权威数值，实际请以当地现行规范为准。")
+
+    thresholds_data = load_thresholds()
+    region_options = list_regions(thresholds_data)
+    region_labels = [f"{label} ({code})" for code, label in region_options]
+    region_idx = st.selectbox("地区", range(len(region_options)), format_func=lambda i: region_labels[i])
+    selected_region = region_options[region_idx][0]
+
+    type_options = list_building_types(selected_region, thresholds_data)
+    type_labels = [f"{label} ({code})" for code, label in type_options]
+    type_idx = st.selectbox("建筑类型", range(len(type_options)), format_func=lambda i: type_labels[i])
+    selected_building_type = type_options[type_idx][0]
+
+    current_thresholds = get_thresholds(selected_region, selected_building_type, thresholds_data)
+    st.markdown(
+        f"- 疏散门净宽 ≥ **{current_thresholds['door_min_width']:.2f}m**\n"
+        f"- 疏散走道净宽 ≥ **{current_thresholds['corridor_min_width']:.2f}m**\n"
+        f"- 参考依据：{current_thresholds['reference_code']}"
     )
 
 # ---------------- 主区域：选择/上传模型 ----------------
@@ -83,7 +106,14 @@ with col_right:
     if run_btn and input_path is not None:
         with st.spinner("正在解析模型并运行规则检查..."):
             model = load_model(input_path)
-            issues = run_rules(model)
+            rules = build_rules(selected_region, selected_building_type)
+            issues = run_rules(model, rules)
+
+        st.caption(
+            f"本次使用阈值：地区={selected_region}，建筑类型={selected_building_type}，"
+            f"疏散门≥{current_thresholds['door_min_width']:.2f}m，"
+            f"疏散走道≥{current_thresholds['corridor_min_width']:.2f}m"
+        )
 
         total = len(issues)
         high = sum(1 for i in issues if i.severity == "high")

@@ -2,8 +2,14 @@
 规则 1：疏散门 / 疏散走道 净宽度检查。
 
 依据：《建筑设计防火规范》GB 50016 等相关消防规范，疏散门、疏散走道
-净宽有最低限值要求。本 Agent 中采用可配置的示例阈值，实际项目请以
-所在地现行规范、建筑类型、疏散人数计算结果为准。
+净宽有最低限值要求，且因国家/地区、建筑类型不同而不同。
+
+阈值来源：默认值（door_min_width=0.9, corridor_min_width=1.2）仅作为兜底示例；
+实际调用时建议通过 src.thresholds.get_thresholds(region, building_type) 从
+data/thresholds.json 结构化配置表中查询对应阈值后传入构造函数
+（见 src/agent.py 的 build_rules()）。这里刻意使用"结构化查表"而非
+LLM/向量检索来确定数值，因为这是可精确匹配的键值查找问题，检索式方案
+存在"语义相近但适用条件不同"的误判风险，不适合合规判断这种容错率低的场景。
 
 判断逻辑：
   - 对每个标记为 is_escape_door=True 的门，若 overall_width < door_min_width，判定不合规。

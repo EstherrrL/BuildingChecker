@@ -18,6 +18,7 @@ from src.models import BuildingModel, Issue
 from src.parsers.json_parser import parse_json_model
 from src.rules.rule_escape_width import EscapeWidthRule
 from src.rules.rule_property_completeness import PropertyCompletenessRule
+from src.thresholds import get_thresholds
 
 DEFAULT_RULES = [EscapeWidthRule(), PropertyCompletenessRule()]
 
@@ -29,6 +30,22 @@ def load_model(input_path: str | Path) -> BuildingModel:
 
         return parse_ifc_model(input_path)
     return parse_json_model(input_path)
+
+
+def build_rules(region: str | None = None, building_type: str | None = None) -> list:
+    """
+    根据 (region, building_type) 从阈值配置表中查出对应数值，构建规则实例。
+    未指定时使用 EscapeWidthRule 的默认值（door>=0.9m, corridor>=1.2m）。
+    """
+    if region and building_type:
+        thresholds = get_thresholds(region, building_type)
+        escape_rule = EscapeWidthRule(
+            door_min_width=thresholds["door_min_width"],
+            corridor_min_width=thresholds["corridor_min_width"],
+        )
+    else:
+        escape_rule = EscapeWidthRule()
+    return [escape_rule, PropertyCompletenessRule()]
 
 
 def run_rules(model: BuildingModel, rules=None) -> List[Issue]:
@@ -117,8 +134,9 @@ def generate_summary(model: BuildingModel, issues: List[Issue]) -> str:
         return _fallback_summary(model, issues) + f"\n（提示：调用 LLM 总结失败，已使用本地模板兜底：{e}）"
 
 
-def check_model(input_path: str | Path):
+def check_model(input_path: str | Path, region: str | None = None, building_type: str | None = None):
     model = load_model(input_path)
-    issues = run_rules(model)
+    rules = build_rules(region, building_type)
+    issues = run_rules(model, rules)
     summary = generate_summary(model, issues)
     return model, issues, summary

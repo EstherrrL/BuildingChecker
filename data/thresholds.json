@@ -1,0 +1,47 @@
+{
+  "_comment": "疏散门/走道净宽度阈值配置表（示例数据，非官方权威数值，仅用于演示 Agent 可按地区/建筑类型动态取阈值的能力）。实际项目请以当地现行规范原文与专业审查意见为准。",
+  "regions": {
+    "CN": {
+      "label": "中国",
+      "reference_code": "GB 50016-2014《建筑设计防火规范》(示例参考，非逐条对照)",
+      "building_types": {
+        "office": {
+          "label": "办公建筑",
+          "door_min_width": 0.9,
+          "corridor_min_width": 1.2
+        },
+        "residential_high_rise": {
+          "label": "高层住宅",
+          "door_min_width": 1.0,
+          "corridor_min_width": 1.4
+        },
+        "hospital": {
+          "label": "医院建筑",
+          "door_min_width": 1.1,
+          "corridor_min_width": 1.4
+        }
+      }
+    },
+    "US": {
+      "label": "美国",
+      "reference_code": "IBC 2021（示例参考，非逐条对照）",
+      "building_types": {
+        "office": {
+          "label": "Office",
+          "door_min_width": 0.915,
+          "corridor_min_width": 1.12
+        },
+        "residential_high_rise": {
+          "label": "Residential (high-rise)",
+          "door_min_width": 0.915,
+          "corridor_min_width": 1.12
+        },
+        "hospital": {
+          "label": "Healthcare / Hospital",
+          "door_min_width": 1.22,
+          "corridor_min_width": 2.44
+        }
+      }
+    }
+  }
+}

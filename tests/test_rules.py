@@ -9,6 +9,8 @@ from src.models import BuildingModel, Door, Corridor
 from src.rules.rule_escape_width import EscapeWidthRule
 from src.rules.rule_property_completeness import PropertyCompletenessRule
 from src.parsers.json_parser import parse_json_model
+from src.thresholds import get_thresholds, list_regions, list_building_types
+from src.agent import build_rules
 
 
 def test_escape_width_flags_narrow_door():
@@ -101,3 +103,36 @@ def test_compliant_sample_model_has_no_issues():
     )
     issues = EscapeWidthRule().check(model) + PropertyCompletenessRule().check(model)
     assert len(issues) == 0
+
+
+def test_thresholds_lookup_returns_expected_keys():
+    regions = list_regions()
+    assert ("CN", "中国") in regions
+    assert ("US", "美国") in regions
+
+    cn_types = list_building_types("CN")
+    assert any(code == "hospital" for code, _ in cn_types)
+
+    thresholds = get_thresholds("CN", "office")
+    assert thresholds["door_min_width"] == 0.9
+    assert thresholds["corridor_min_width"] == 1.2
+    assert "GB 50016" in thresholds["reference_code"]
+
+
+def test_build_rules_applies_region_specific_threshold():
+    """相同的门在不同地区/建筑类型阈值下，判断结果应不同（体现阈值可配置）。"""
+    model = BuildingModel(
+        project="test",
+        doors=[Door(id="D8", name="疏散门", overall_width=1.0, fire_rating="A1.0h", is_escape_door=True)],
+    )
+
+    # 中国办公建筑阈值 0.9m，1.0m 的门合规
+    cn_rules = build_rules("CN", "office")
+    cn_issues = [i for r in cn_rules for i in r.check(model) if i.rule_id == "R1-EscapeWidth"]
+    assert len(cn_issues) == 0
+
+    # 美国医院建筑阈值 1.22m，同样 1.0m 的门变得不合规
+    us_rules = build_rules("US", "hospital")
+    us_issues = [i for r in us_rules for i in r.check(model) if i.rule_id == "R1-EscapeWidth"]
+    assert len(us_issues) == 1
+    assert us_issues[0].severity == "high"
