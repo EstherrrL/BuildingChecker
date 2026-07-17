@@ -1,4 +1,4 @@
-# Building Model Compliance Checker Agent
+# Building Model Compliance Checker
 
 An intelligent agent that performs basic compliance and reasonableness checks on building design models (IFC / simplified JSON).
 
@@ -81,9 +81,9 @@ Both input types are converted into a unified `BuildingModel`; the rule engine i
 ---
 ---
 
-# 建筑模型合规检查 Agent
+# 建筑模型合规检查员
 
-一个用于对建筑设计模型（IFC / 简化 JSON）进行基础合规与合理性检查的智能 Agent。
+一个用于对建筑设计模型（IFC / 简化 JSON）进行基础合规与合理性检查的智能Checker。
 
 ---
 
