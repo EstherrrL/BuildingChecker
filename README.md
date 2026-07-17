@@ -72,12 +72,11 @@ Both input types are converted into a unified `BuildingModel`; the rule engine i
 
 ## Limitations & Future Work
 
-- Thresholds in `data/thresholds.json` are illustrative examples for a handful of (region, building type) combinations, not authoritative values; real projects must determine them from local codes, building type, and occupant-load calculations. We deliberately used a structured lookup table (not a vector DB / RAG) for this, since it's an exact key-value lookup problem where a similarity-search-based approach risks returning a plausible-but-wrong threshold.
-- Geometric clash detection (walls/beams/pipes) is not implemented, as it is computationally heavier; left as future work.
-- IFC corridor parsing uses a simplified heuristic (identifying `IfcSpace` by name keywords); production use should customize the logic per the project's BIM modeling standard.
-- Rules are currently hard-coded; a future extension could move them into configurable YAML/JSON rule files so rules can be added/removed without code changes.
-- Not using LangChain/LangGraph for now, since the current flow is a single-pass, deterministic pipeline (rules → LLM summary) with no multi-step reasoning. These frameworks would be worth introducing if we add multi-turn Q&A, RAG over real code documents, or multi-agent orchestration.
-- **On "is this really an agent?"**: strictly speaking, this project has no autonomous tool-calling — the two rules always run unconditionally (deliberately, since under-checking is far more costly than over-checking in a compliance context), and the LLM is only invoked once, to write a natural-language summary of already-finalized, deterministic results. We explored giving the LLM decision-making power (e.g., "let the LLM decide which rules to run", or "let the LLM decide whether to invoke an extra tool based on severity"), but rejected both: the first would reduce checking coverage for no real benefit, and the second turned out to be a decision fully determined by already-structured data (i.e., a disguised if-statement, not genuine judgment). We'd rather be upfront about this than dress up an if-else chain as "agentic". A defensible way to add real autonomy later would be tool-calling over genuinely ambiguous, cross-rule semantic reasoning (e.g., "do these two independent findings on the same element indicate one underlying root cause?") — but we judged the added complexity wasn't justified for this submission's scope.
+- Thresholds in `data/thresholds.json` are illustrative examples, not authoritative values. We use a structured lookup table (not RAG/vector search) since this is an exact key-value problem — similarity search risks returning a plausible-but-wrong threshold for a different building type or region.
+- Geometric clash detection (walls/beams/pipes) is computationally heavier; left as future work.
+- IFC corridor parsing uses a simplified heuristic (name-keyword matching on `IfcSpace`); production use should follow the project's BIM modeling standard.
+- Rules are hard-coded for now; a natural extension is a configurable YAML/JSON rule file so rules can be added without code changes.
+- LLM is used only for natural-language summarization of already-finalized deterministic results, not for rule selection or numeric judgment — intentional, to avoid hallucination on compliance verdicts. LangChain/LangGraph would be worth adding if multi-turn Q&A or RAG over real code documents becomes a requirement.
 
 ---
 ---
@@ -156,9 +155,8 @@ tests/                      单元测试
 
 ## 局限性与后续可扩展方向
 
-- `data/thresholds.json` 中的阈值仅是几组 (地区, 建筑类型) 组合的示例数据，不具备权威性，实际项目需按当地规范、建筑类型、疏散人数计算确定。这里刻意选择"结构化查表"而非向量数据库/RAG检索，因为这是可精确匹配的键值查找问题，检索式方案存在"语义相近但适用条件不同"从而返回错误阈值的风险。
-- 未实现几何碰撞检测（墙/梁/管道），该功能计算复杂度较高，作为后续扩展方向。
-- IFC 走道解析为简化启发式处理（通过名称关键字识别 `IfcSpace`），生产环境建议按项目 BIM 建模规范定制识别逻辑。
-- 规则目前硬编码在代码中，后续可扩展为可配置的 YAML/JSON 规则文件，无需改代码即可增删规则。
-- 暂未使用 LangChain/LangGraph：当前流程是单次线性调用（规则判断 → LLM 总结），无需多步推理。若后续支持多轮追问、检索真实规范条文（RAG）或多智能体协作，再引入会更合适。
-- **关于"这算不算真正的 Agent"**：严格来说，本项目没有自主工具调用能力——两条规则始终无条件全部执行（这是刻意设计，因为在合规检查场景下"漏检"的代价远高于"多检查一点"），LLM 仅在最后被调用一次，为已经确定的结构化结果生成自然语言总结。我们也评估过赋予 LLM 决策权的方案（例如"让 LLM 自主决定跑哪些规则"，或"让 LLM 根据严重程度决定是否调用增强工具"），但都被否决了：前者会在没有实质收益的情况下降低检查覆盖率；后者的决策依据其实是已经结构化好的字段（严重程度），本质上是一个可以用 if 语句完成的判断，并不是真正需要语言理解能力的判断，属于"伪装成智能体"的功能。我们认为坦诚说明这一点，比把 if-else 包装成"agentic"更有价值。未来若要引入真正站得住脚的自主性，一个合理方向是：针对"同一构件被多条规则命中时，这些发现是否指向同一个根因"这类需要语义综合判断（而非查表）的场景做工具调用——但经评估，这超出了本次提交的合理范围，故未实现。
+- `data/thresholds.json` 中的阈值仅为示例数据，不具备权威性。这里刻意选择结构化查表而非 RAG/向量检索，因为这是精确键值查找问题——检索式方案存在返回语义相近但适用条件不同的错误阈值的风险。
+- 几何碰撞检测（墙/梁/管道）计算复杂度较高，作为后续扩展方向。
+- IFC 走道解析采用简化启发式处理（通过名称关键字识别 `IfcSpace`），生产环境建议按项目 BIM 建模规范定制。
+- 规则目前硬编码，后续可扩展为 YAML/JSON 配置文件，无需改代码即可增删规则。
+- LLM 仅用于对结果生成自然语言总结，不参与规则选择或数值判断。这是刻意设计，避免 LLM 在合规判断上产生幻觉。若后续需要多轮追问或检索真实规范条文（RAG），再引入 LangChain/LangGraph。
