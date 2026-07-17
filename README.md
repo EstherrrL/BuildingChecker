@@ -72,7 +72,7 @@ Both input types are converted into a unified `BuildingModel`; the rule engine i
 
 ## Limitations & Future Work
 
-- Thresholds in `data/thresholds.json` are illustrative examples, not authoritative values. We use a structured lookup table (not RAG/vector search) since this is an exact key-value problem — similarity search risks returning a plausible-but-wrong threshold for a different building type or region.
+- Thresholds in `data/thresholds.json` are illustrative examples, not authoritative values. We use a structured lookup table (not RAG/vector search) since this is an exact key-value problem.
 - Geometric clash detection (walls/beams/pipes) is computationally heavier; left as future work.
 - IFC corridor parsing uses a simplified heuristic (name-keyword matching on `IfcSpace`); production use should follow the project's BIM modeling standard.
 - Rules are hard-coded for now; a natural extension is a configurable YAML/JSON rule file so rules can be added without code changes.
@@ -155,7 +155,7 @@ tests/                      单元测试
 
 ## 局限性与后续可扩展方向
 
-- `data/thresholds.json` 中的阈值仅为示例数据，不具备权威性。这里刻意选择结构化查表而非 RAG/向量检索，因为这是精确键值查找问题——检索式方案存在返回语义相近但适用条件不同的错误阈值的风险。
+- `data/thresholds.json` 中的阈值仅为示例数据，不具备权威性。这里刻意选择结构化查表而非 RAG/向量检索，因为这是精确键值查找问题。RAG适合输入是模糊自然语言问题的情况。
 - 几何碰撞检测（墙/梁/管道）计算复杂度较高，作为后续扩展方向。
 - IFC 走道解析采用简化启发式处理（通过名称关键字识别 `IfcSpace`），生产环境建议按项目 BIM 建模规范定制。
 - 规则目前硬编码，后续可扩展为 YAML/JSON 配置文件，无需改代码即可增删规则。
